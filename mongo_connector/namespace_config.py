@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 
 _Namespace = namedtuple(
     "Namespace",
-    ["dest_name", "source_name", "gridfs", "include_fields", "exclude_fields"],
+    ["dest_name", "source_name", "order", "gridfs", "include_fields", "exclude_fields"],
 )
 
 
@@ -35,6 +35,7 @@ class Namespace(_Namespace):
         cls,
         dest_name=None,
         source_name=None,
+        order=None,
         gridfs=False,
         include_fields=None,
         exclude_fields=None,
@@ -42,13 +43,14 @@ class Namespace(_Namespace):
         include_fields = set(include_fields or [])
         exclude_fields = set(exclude_fields or [])
         return super(Namespace, cls).__new__(
-            cls, dest_name, source_name, gridfs, include_fields, exclude_fields
+            cls, dest_name, source_name, order, gridfs, include_fields, exclude_fields
         )
 
     def with_options(self, **kwargs):
         new_options = dict(
             dest_name=self.dest_name,
             source_name=self.source_name,
+            order=self.order,
             gridfs=self.gridfs,
             include_fields=self.include_fields,
             exclude_fields=self.exclude_fields,
@@ -239,6 +241,11 @@ class NamespaceConfig(object):
         # that future lookups of the same namespace are fast.
         self._ex_namespace_set.add(plain_src_ns)
         return None
+
+    def get_order(self, src_ns):
+
+        namespace = self.lookup(src_ns)
+        return namespace.order
 
     def map_namespace(self, plain_src_ns):
         """Given a plain source namespace, return the corresponding plain
@@ -451,6 +458,7 @@ def _merge_namespace_options(
                 gridfs_set.add(source_name)
             namespaces[source_name] = Namespace(
                 dest_name=options_or_str.get("rename"),
+                order=options_or_str.get("order"),
                 include_fields=options_or_str.get("includeFields"),
                 exclude_fields=options_or_str.get("excludeFields"),
                 gridfs=options_or_str.get("gridfs", False),

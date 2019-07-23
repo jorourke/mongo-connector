@@ -533,6 +533,9 @@ class OplogThread(threading.Thread):
         # Use a list to workaround python scoping.
         dump_cancelled = [False]
 
+        def sort_ns_set(ns_set):
+            return sorted(ns_set, key=self.namespace_config.get_order)
+
         def get_all_ns():
             ns_set = []
             gridfs_ns_set = []
@@ -563,7 +566,7 @@ class OplogThread(threading.Thread):
                         namespace = "%s.%s" % (database, coll)
                         if self.namespace_config.map_namespace(namespace):
                             ns_set.append(namespace)
-            return ns_set, gridfs_ns_set
+            return sort_ns_set(ns_set), gridfs_ns_set
 
         dump_set, gridfs_dump_set = get_all_ns()
 
